@@ -1,0 +1,60 @@
+name: PR Review Workflow Template
+
+# Convert to reusable workflow by changing the trigger
+on:
+  workflow_call:
+    # Define inputs that can be passed from the caller workflow
+    inputs:
+      php-version:
+        description: "PHP version to use"
+        required: false
+        default: "8.1"
+        type: string
+      composer-version:
+        description: "Composer version to use"
+        required: false
+        default: "v2"
+        type: string
+
+jobs:
+  # Define a single job called 'verify'
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the code from the pull request
+      - name: 1. Check out repository
+        uses: actions/checkout@v5
+
+      # Step 2: Set up PHP environment
+      - name: 2. Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ inputs.php-version }}
+          tools: composer:${{ inputs.composer-version }}
+
+      # Step 3: Cache Composer's vendor directory
+      # This speeds up future builds by not re-downloading dependencies
+      - name: 3. Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          # Create a unique key based on the composer.lock file
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          # Use a fallback key if the lock file hasn't changed
+          restore-keys: ${{ runner.os }}-composer-
+
+      # Step 4: Install dependencies
+      - name: 4. Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+      # Step 5: Run required checks
+      # Each command is a separate step. If any step fails,
+      # the entire job will fail and mark the pull request.# Step 4: Install dependencies
+      - name: 5. Run tests (PHPUnit)
+        run: composer test
+
+      - name: 6. Run static analysis (PHPStan)
+        run: composer analyse
+
+      - name: 7. Run code style check (PHP-CS-Fixer)
+        run: composer code-sniff
