@@ -33,7 +33,12 @@ jobs:
           php-version: ${{ inputs.php-version }}
           tools: composer:${{ inputs.composer-version }}
 
-      # Step 3: Cache Composer's vendor directory
+      # Step 2: Get composer cache directory
+      - name: 2. Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      # Step 3: Cache Composer dependencies
       # This speeds up future builds by not re-downloading dependencies
       - name: 3. Cache Composer dependencies
         uses: actions/cache@v4
