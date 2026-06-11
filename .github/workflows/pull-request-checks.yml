@@ -8,7 +8,7 @@ on:
       php-version:
         description: "PHP version to use"
         required: false
-        default: "8.1"
+        default: "8.4"
         type: string
       composer-version:
         description: "Composer version to use"
@@ -59,7 +59,7 @@ jobs:
         run: composer test
 
       - name: 6. Run static analysis (PHPStan)
-        run: composer code-analyse
+        run: composer analyse
 
       - name: 7. Run code style check (PHP-CS-Fixer)
-        run: composer code-sniff
+        run: composer sniff
